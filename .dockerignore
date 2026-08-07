@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+bot.db
+bahman_bot.session
+.env
