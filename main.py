@@ -1,4 +1,5 @@
 from telethon import TelegramClient
+from telethon.sessions import StringSession
 
 from config import API_ID, API_HASH, BOT_TOKEN
 from database import init_db
@@ -10,7 +11,7 @@ from handlers import callbacks
 
 
 client = TelegramClient(
-    "bahman_bot",
+    StringSession(),
     API_ID,
     API_HASH
 ).start(bot_token=BOT_TOKEN)
