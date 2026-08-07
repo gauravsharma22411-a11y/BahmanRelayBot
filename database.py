@@ -1,6 +1,6 @@
 import aiosqlite
 
-DB_PATH = "data/bot.db"
+DB_PATH = "bot.db"
 
 
 async def init_db():
