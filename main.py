@@ -4,10 +4,10 @@ from telethon.sessions import StringSession
 from config import API_ID, API_HASH, BOT_TOKEN
 from database import init_db
 
-from handlers import start
-from handlers import relay
-from handlers import admin
-from handlers import callbacks
+import start
+import relay
+import admin
+import callbacks
 
 
 client = TelegramClient(
