@@ -1,4 +1,5 @@
 from telethon import events
+import time
 
 from config import (
     OWNER_ID,
@@ -11,10 +12,14 @@ from database import (
     is_banned
 )
 
+# cooldown tracker: {user_id: last_delivered_timestamp}
+delivered_cooldown = {}
+COOLDOWN_SECONDS = 4 * 60 * 60  # 4 hours
+
 
 def register(client):
 
-    @client.on(events.NewMessage(incoming=True))
+    @client.on(events.NewMessage(incoming=True, func=lambda e: not e.out))
     async def relay_message(event):
 
         if event.sender_id == OWNER_ID:
@@ -38,16 +43,13 @@ def register(client):
         )
 
         if event.message.media:
-
             owner_msg = await client.send_file(
                 OWNER_ID,
                 event.message.media,
                 caption=header + (event.raw_text or ""),
                 parse_mode="html"
             )
-
         else:
-
             owner_msg = await client.send_message(
                 OWNER_ID,
                 header + (event.raw_text or ""),
@@ -60,12 +62,18 @@ def register(client):
             event.id
         )
 
-        await event.reply(
-            DELIVERED_TEXT,
-            parse_mode="html"
-        )
+        # Only send delivered text if first time or cooldown passed
+        now = time.time()
+        last_sent = delivered_cooldown.get(sender.id, 0)
 
-    @client.on(events.NewMessage(from_users=OWNER_ID))
+        if now - last_sent >= COOLDOWN_SECONDS:
+            await event.reply(
+                DELIVERED_TEXT,
+                parse_mode="html"
+            )
+            delivered_cooldown[sender.id] = now
+
+    @client.on(events.NewMessage(from_users=OWNER_ID, outgoing=False))
     async def owner_reply(event):
 
         if not event.is_reply:
@@ -84,26 +92,20 @@ def register(client):
         user_id, _ = data
 
         try:
-
             if event.message.media:
-
                 await client.send_file(
                     user_id,
                     event.message.media,
                     caption=event.raw_text or ""
                 )
-
             else:
-
                 await client.send_message(
                     user_id,
                     event.raw_text or ""
                 )
 
         except Exception as e:
-
             await event.reply(
                 f"❌ Error:\n<code>{e}</code>",
                 parse_mode="html"
             )
-
